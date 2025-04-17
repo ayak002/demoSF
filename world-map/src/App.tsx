@@ -6,7 +6,8 @@ function App() {
   return (
     <div className="App">
       <h1>SOLIDE FINANCE</h1>
-      <WorldMap departure="France" arrival="Afghanistan" />
+      <WorldMap countries={["France", "Germany", "Egypt", "Kenya"]} />
+
     </div>
   );
 }
