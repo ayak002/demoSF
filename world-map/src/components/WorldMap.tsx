@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ComposableMap, Geographies, Geography, Marker, Line } from "react-simple-maps";
+import { geoCentroid } from "d3-geo";
 import MapTooltip from "./ToolTip";
 import capitalData from "../data/data.json";
 
@@ -20,9 +21,12 @@ const WorldMap: React.FC<WorldMapProps> = ({ countries }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [clickedCountries, setClickedCountries] = useState<Set<string>>(new Set());
+  const [arrivalPosition, setArrivalPosition] = useState<[number, number] | null>(null);
+
 
   const handleCountryClick = (geo: any) => {
     const countryName = geo.properties.name;
+  
     setClickedCountries((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(countryName)) {
@@ -32,6 +36,9 @@ const WorldMap: React.FC<WorldMapProps> = ({ countries }) => {
       }
       return newSet;
     });
+  
+    const [lng, lat] = geoCentroid(geo);
+    setArrivalPosition([lng, lat]);
   };
 
   const capitalSteps = countries
@@ -44,8 +51,16 @@ const WorldMap: React.FC<WorldMapProps> = ({ countries }) => {
 
   const lineSegments: [number, number][][] = [];
   for (let i = 0; i < capitalSteps.length - 1; i++) {
-    const from: [number, number] = [capitalSteps[i].Longitude, capitalSteps[i].Latitude];
-    const to: [number, number] = [capitalSteps[i + 1].Longitude, capitalSteps[i + 1].Latitude];
+    const from: [number, number] = [
+      capitalSteps[i].Longitude,
+      capitalSteps[i].Latitude,
+    ];
+  
+    const to: [number, number] =
+      i === capitalSteps.length - 2 && arrivalPosition
+        ? arrivalPosition
+        : [capitalSteps[i + 1].Longitude, capitalSteps[i + 1].Latitude];
+  
     lineSegments.push([from, to]);
   }
 
@@ -129,6 +144,15 @@ const WorldMap: React.FC<WorldMapProps> = ({ countries }) => {
             </Marker>
           );
         })}
+        {}
+      {arrivalPosition && (
+        <Marker coordinates={arrivalPosition}>
+          <circle r={4} fill="white" stroke="#56BD9F" strokeWidth={1.5} />
+          <text textAnchor="middle" y={-10} fontSize={10}>
+            NeW Arrival
+          </text>
+        </Marker>
+      )}
       </ComposableMap>
 
       {showTooltip && (
